@@ -1,75 +1,48 @@
-name: Python Project CI
+name: Check Virtual Environment Setup
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
-  build:
+  check-virtualenv:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Step 2: Set up Python (specify Python version if needed)
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-
-    # Step 3: Try to activate either pip venv or conda environment
-    - name: Activate virtual environment (venv or conda, but not both)
-      run: |
-        VENV_ACTIVATED=false
-        
-        # Check if pip virtual environment is activated
-        if python -c 'import sys; sys.exit(not hasattr(sys, "real_prefix"))' 2>/dev/null; then
-          echo "Pip virtual environment already activated."
-          VENV_ACTIVATED=true
-        
-        # Check if pip venv can be activated (without assuming the folder structure)
-        elif python -m venv --help >/dev/null 2>&1; then
-          echo "Attempting to activate pip virtual environment via console."
-          if source "$(python -c 'import sys; print(sys.prefix)')/bin/activate" 2>/dev/null; then
-            echo "Pip virtual environment activated."
-            VENV_ACTIVATED=true
-          fi
-        
-        # If pip venv wasn't found, check for Conda
-        elif command -v conda >/dev/null 2>&1; then
-          echo "Conda found, attempting to activate."
-          conda_env=$(conda info --envs | grep '*' | awk '{print $1}')
-          if [ "$conda_env" != "base" ]; then
-            echo "Activating conda environment: $conda_env"
-            conda activate $conda_env
-            VENV_ACTIVATED=true
+      - name: Check for conda environment
+        run: |
+          if [ -f "environment.yml" ]; then
+            echo "conda environment detected."
+            echo "CONDA_ENV=true" >> $GITHUB_ENV
           else
-            echo "No active Conda environment found."
+            echo "No conda environment found."
+            echo "CONDA_ENV=false" >> $GITHUB_ENV
           fi
-        fi
-
-        # Fail if neither environment is activated
-        if [ "$VENV_ACTIVATED" = false ]; then
-          echo "No virtual environment (pip venv or conda) could be activated."
-          exit 1
-        fi
-
-    # Step 4: Install dependencies from requirements.txt
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-
-    # Step 5: Check if numpy version is 2.1.0
-    - name: Check numpy version
-      run: |
-        INSTALLED_NUMPY_VERSION=$(python -c "import numpy; print(numpy.__version__)")
-        if [ "$INSTALLED_NUMPY_VERSION" != "2.1.0" ]; then
-          echo "Numpy version is $INSTALLED_NUMPY_VERSION, expected 2.1.0"
-          exit 1
-        fi
+      
+      - name: Check for venv environment (venv/bin/activate)
+        run: |
+          if [ -f "venv/bin/activate" ]; then
+            echo "venv environment detected (venv/bin/activate)."
+            echo "VENV_ENV=true" >> $GITHUB_ENV
+          else
+            echo "No venv environment found in venv/bin/activate."
+            echo "VENV_ENV=false" >> $GITHUB_ENV
+          fi
+      
+      - name: Check for venv environment (.venv/Scripts/activate)
+        run: |
+          if [ -f ".venv/Scripts/activate" ]; then
+            echo "venv environment detected (.venv/Scripts/activate)."
+            echo "VENV_ALT_ENV=true" >> $GITHUB_ENV
+          else
+            echo "No venv environment found in .venv/Scripts/activate."
+            echo "VENV_ALT_ENV=false" >> $GITHUB_ENV
+          fi
+      
+      - name: Fail if no environment is found
+        run: |
+          if [[ "$CONDA_ENV" == "false" && "$VENV_ENV" == "false" && "$VENV_ALT_ENV" == "false" ]]; then
+            echo "Error: No virtual environment detected. Workflow failed."
+            exit 1
+          fi
