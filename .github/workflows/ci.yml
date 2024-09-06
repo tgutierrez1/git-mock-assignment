@@ -23,33 +23,41 @@ jobs:
       with:
         python-version: '3.x'
 
-    # Step 3: Try to activate virtual environment (pip venv or conda) using terminal commands
-    - name: Activate virtual environment (venv or conda)
+    # Step 3: Try to activate either pip venv or conda environment
+    - name: Activate virtual environment (venv or conda, but not both)
       run: |
-        # Try to activate pip virtual environment via the terminal using `python -m venv`
+        VENV_ACTIVATED=false
+        
+        # Check if pip virtual environment is activated
         if python -c 'import sys; sys.exit(not hasattr(sys, "real_prefix"))' 2>/dev/null; then
           echo "Pip virtual environment already activated."
+          VENV_ACTIVATED=true
+        
+        # Check if pip venv can be activated (without assuming the folder structure)
+        elif python -m venv --help >/dev/null 2>&1; then
+          echo "Attempting to activate pip virtual environment via console."
+          if source "$(python -c 'import sys; print(sys.prefix)')/bin/activate" 2>/dev/null; then
+            echo "Pip virtual environment activated."
+            VENV_ACTIVATED=true
+          fi
+        
+        # If pip venv wasn't found, check for Conda
         elif command -v conda >/dev/null 2>&1; then
-          echo "Conda found, checking for active environment..."
+          echo "Conda found, attempting to activate."
           conda_env=$(conda info --envs | grep '*' | awk '{print $1}')
           if [ "$conda_env" != "base" ]; then
-            echo "Activating conda environment via console: $conda_env"
+            echo "Activating conda environment: $conda_env"
             conda activate $conda_env
+            VENV_ACTIVATED=true
           else
-            echo "No active conda environment found."
-            exit 1
+            echo "No active Conda environment found."
           fi
-        else
-          echo "No virtual environment found. Attempting to activate using shell command."
-          
-          # Activating venv using shell (assumes proper activation script exists in the environment)
-          if python -m venv --help >/dev/null 2>&1; then
-            echo "No active pip virtual environment found. Attempting activation."
-            source "$(python -c 'import sys; print(sys.prefix)')/bin/activate" || exit 1
-          else
-            echo "No pip virtual environment or conda environment found."
-            exit 1
-          fi
+        fi
+
+        # Fail if neither environment is activated
+        if [ "$VENV_ACTIVATED" = false ]; then
+          echo "No virtual environment (pip venv or conda) could be activated."
+          exit 1
         fi
 
     # Step 4: Install dependencies from requirements.txt
@@ -61,4 +69,7 @@ jobs:
     - name: Check numpy version
       run: |
         INSTALLED_NUMPY_VERSION=$(python -c "import numpy; print(numpy.__version__)")
-        if
+        if [ "$INSTALLED_NUMPY_VERSION" != "2.1.0" ]; then
+          echo "Numpy version is $INSTALLED_NUMPY_VERSION, expected 2.1.0"
+          exit 1
+        fi
