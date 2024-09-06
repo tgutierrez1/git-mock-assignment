@@ -23,29 +23,42 @@ jobs:
       with:
         python-version: '3.x'
 
-    # Step 3: Check if virtual environment exists and activate it
-    - name: Check for virtual environment
+    # Step 3: Try to activate virtual environment (pip venv or conda) using terminal commands
+    - name: Activate virtual environment (venv or conda)
       run: |
-        if [ ! -d ".venv" ]; then
-          echo "Virtual environment not found in project directory."
-          exit 1
+        # Try to activate pip virtual environment via the terminal using `python -m venv`
+        if python -c 'import sys; sys.exit(not hasattr(sys, "real_prefix"))' 2>/dev/null; then
+          echo "Pip virtual environment already activated."
+        elif command -v conda >/dev/null 2>&1; then
+          echo "Conda found, checking for active environment..."
+          conda_env=$(conda info --envs | grep '*' | awk '{print $1}')
+          if [ "$conda_env" != "base" ]; then
+            echo "Activating conda environment via console: $conda_env"
+            conda activate $conda_env
+          else
+            echo "No active conda environment found."
+            exit 1
+          fi
         else
-          echo "Virtual environment found."
-          source .venv/Scripts/activate
+          echo "No virtual environment found. Attempting to activate using shell command."
+          
+          # Activating venv using shell (assumes proper activation script exists in the environment)
+          if python -m venv --help >/dev/null 2>&1; then
+            echo "No active pip virtual environment found. Attempting activation."
+            source "$(python -c 'import sys; print(sys.prefix)')/bin/activate" || exit 1
+          else
+            echo "No pip virtual environment or conda environment found."
+            exit 1
+          fi
         fi
 
     # Step 4: Install dependencies from requirements.txt
     - name: Install dependencies
       run: |
-        source .venv/Scripts/activate
         pip install -r requirements.txt
 
-    # Step 5: Check if numpy version is 1.26.1
+    # Step 5: Check if numpy version is 2.1.0
     - name: Check numpy version
       run: |
-        source .venv/Scripts/activate
         INSTALLED_NUMPY_VERSION=$(python -c "import numpy; print(numpy.__version__)")
-        if [ "$INSTALLED_NUMPY_VERSION" != "1.26.1" ]; then
-          echo "Numpy version is $INSTALLED_NUMPY_VERSION, expected 1.26.1"
-          exit 1
-        fi
+        if
