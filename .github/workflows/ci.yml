@@ -1,48 +1,40 @@
-name: Check Virtual Environment Setup
+name: Test Workflow
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  check-virtualenv:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Check for conda environment
-        run: |
-          if [ -f "environment.yml" ]; then
-            echo "conda environment detected."
-            echo "CONDA_ENV=true" >> $GITHUB_ENV
-          else
-            echo "No conda environment found."
-            echo "CONDA_ENV=false" >> $GITHUB_ENV
-          fi
-      
-      - name: Check for venv environment (venv/bin/activate)
-        run: |
-          if [ -f "venv/bin/activate" ]; then
-            echo "venv environment detected (venv/bin/activate)."
-            echo "VENV_ENV=true" >> $GITHUB_ENV
-          else
-            echo "No venv environment found in venv/bin/activate."
-            echo "VENV_ENV=false" >> $GITHUB_ENV
-          fi
-      
-      - name: Check for venv environment (.venv/Scripts/activate)
-        run: |
-          if [ -f ".venv/Scripts/activate" ]; then
-            echo "venv environment detected (.venv/Scripts/activate)."
-            echo "VENV_ALT_ENV=true" >> $GITHUB_ENV
-          else
-            echo "No venv environment found in .venv/Scripts/activate."
-            echo "VENV_ALT_ENV=false" >> $GITHUB_ENV
-          fi
-      
-      - name: Fail if no environment is found
-        run: |
-          if [[ "$CONDA_ENV" == "false" && "$VENV_ENV" == "false" && "$VENV_ALT_ENV" == "false" ]]; then
-            echo "Error: No virtual environment detected. Workflow failed."
-            exit 1
-          fi
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x' 
+
+    - name: Install numpy
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Check numpy version
+      run: |
+        python -c "import numpy; assert numpy.__version__ == '1.26.1', f'Numpy version is {numpy.__version__}'"
+        
+    - name: Check output
+      run: |
+        output=$(python main.py)
+        expected_output="[1 2 3 4 5 6 7 8 9 10]"
+        if [[ "$output" != "$expected_output" ]]; then
+          echo "Output is $output, but expected $expected_output"
+          exit 1
+        fi
