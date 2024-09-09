@@ -28,6 +28,7 @@ The tests will be checking:
 
 1. That the script `main.py` abides by the Python `flake8` style requirements
 2. That the script `main.py` runs successfully and print exactly only the content of the array
+3. That you use the relevant version of Numpy, as indicated above
 
 ## Git
 
