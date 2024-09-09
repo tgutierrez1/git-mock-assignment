@@ -17,18 +17,11 @@ jobs:
       - name: Run setup script
         run: pip3 install -r requirements.txt
 
-      - name: Run main.py
-        id: run_main
-        run: |
-          set +e
-          python3 main.py
-          exit_code=$?
-          echo "EXIT_CODE=${exit_code}" >> $GITHUB_OUTPUT
-
       - name: Check output
         run: |
           output=$(python main.py)
           expected_output=$(python -c "import numpy as np; print(np.array(np.arange(1, 11)))")
-          alternative_output="[1 2 3 4 5 6 7 8 9 10]"
-          comma_separated="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-          python -c "import numpy as np; assert $output == $expected_output or $output == $alternative_output or $output == $comma_separated, f'Output is {output}'"
+          if [ "$output" != "$expected_output" ]; then
+            echo "Output is $output, but expected $expected_output"
+            exit 1
+          fi

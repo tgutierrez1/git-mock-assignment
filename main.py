@@ -1,4 +1,4 @@
 # your code here
 import numpy as np
 
-print("1,2,3")
+print(np.array(np.arange(1, 11)))
