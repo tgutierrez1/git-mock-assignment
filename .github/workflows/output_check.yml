@@ -21,7 +21,7 @@ jobs:
         run: |
           output=$(python main.py)
           expected_output=$(python -c "import numpy as np; print(np.array(np.arange(1, 11)))")
-          if [ "$output" != "$expected_output" ] || [ "$output" != "$alternative_output" ]; then
-            echo "Output is $output, but expected $expected_output or $alternative_output"
+          if [ "$output" != "$expected_output" ]; then
+            echo "Output is $output, but expected $expected_output"
             exit 1
           fi
