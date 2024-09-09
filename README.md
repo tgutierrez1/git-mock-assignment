@@ -32,7 +32,7 @@ The tests will be checking:
 
 ## Git
 
-1. Fork this repo **using the appropriate "Use this template" button** in the upper-right part of the GitHub interface
+1. Create your own version of the repository **using the appropriate "Use this template" button** in the upper-right part of the GitHub interface
 2. Clone the repo locally
 3. Implement your code
 4. Populate the `requirements.txt` file appropriately, as indicated above
