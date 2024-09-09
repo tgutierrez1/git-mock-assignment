@@ -1,4 +1,4 @@
-name: Numpy and Output Check
+name: Numpy Check
 
 on:
   push:
