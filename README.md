@@ -5,7 +5,7 @@ In this assignment, you are required to create a very simple Python script that 
 ## Your code
 
 The code is a very simple implementation of a numpy array.
-Write it in a file `example.py`. In this script...
+Write it in a file `main.py`. In this script...
 
 * You should create a list containing all the numbers from 1 to 10.
 * A numpy array should be created from this list
@@ -18,19 +18,16 @@ Write it in a file `example.py`. In this script...
 
 ## The files
 
-In addition to the `example.py` file, you should also provide a `requirements.txt` file with the following content:
-
-1. A header, where you write `#CONDA` if you're using a Conda environment, `#PIP` if you're using a virutal environment
-2. The libraries that need to be installed to run the code
+In addition to the `main.py` file, you should also provide a `requirements.txt` file in which you provide the list of libraries needed to run your code.
+The file has to be filled in using the [pip requirements standard](https://pip.pypa.io/en/stable/reference/requirements-file-format/).
 
 ## The tests
 
 The automatic tests are set up inside the folder `.github/workflows`, which you should not touch or tamper with.
 The tests will be checking:
 
-1. That the script `example.py` abides by the Python `flake8` style requirements
-2. That you successfully create and activate an environment
-3. That the script `example.py` runs successfully and print exactly only the content of the array
+1. That the script `main.py` abides by the Python `flake8` style requirements
+2. That the script `main.py` runs successfully and print exactly only the content of the array
 
 ## Git
 
