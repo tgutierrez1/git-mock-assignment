@@ -20,7 +20,7 @@ jobs:
       - name: Check output
         run: |
           output=$(python main.py)
-          expected_output=$(python -c "import numpy; print(numpy.array(np.arrange(1, 11)))")
+          expected_output=$(python -c "import numpy as np; print(np.array(np.arrange(1, 11)))")
           if [ "$output" != "$expected_output" ] || [ "$output" != "$alternative_output" ]; then
             echo "Output is $output, but expected $expected_output or $alternative_output"
             exit 1
